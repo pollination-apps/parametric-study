@@ -37,6 +37,9 @@ def set_model():
         index=default_index
     )
 
+    if 'temp_folder' not in st.session_state:
+        st.session_state.temp_folder = Path(tempfile.mkdtemp())
+
     if option == 'Upload a File':
         uploaded_file = st.file_uploader(
             'Upload an HBJSON file.', type=['hbjson', 'json'],
@@ -44,7 +47,6 @@ def set_model():
         )
 
         if uploaded_file:
-            st.session_state.temp_folder = Path(tempfile.mkdtemp())
             hb_model_path = st.session_state.temp_folder.joinpath(uploaded_file.name)
             hb_model_path.write_bytes(uploaded_file.read())
             hb_model = HBModel.from_dict(json.loads(hb_model_path.read_text()))
@@ -54,7 +56,6 @@ def set_model():
         model_data = button.get(is_pollination_model=True, key='pollination-model')
 
         if model_data:
-            st.session_state.temp_folder = Path(tempfile.mkdtemp())
             hb_model = HBModel.from_dict(model_data)
             hb_model_path = st.session_state.temp_folder.joinpath(
                 f'{hb_model.identifier}.hbjson')
