@@ -7,7 +7,7 @@ import submit_to_pollination
 import extra_streamlit_components as stx
 from model import set_model
 from params import get_params
-from viewer import render
+
 from visualize import get_design_options
 from pollination_streamlit_io import special
 from streamlit.server.server import Server
@@ -39,12 +39,6 @@ def main():
 
     if step == 0:
         set_model()
-        if 'hb_model_path' in st.session_state and st.session_state.host != 'rhino':
-            render(st.session_state.hb_model_path)
-            st.write(
-                'The model is loaded! You can now move to the next step to set the '
-                'input parameters.'
-            )
 
     elif step == 1:
         if 'hb_model_path' not in st.session_state:

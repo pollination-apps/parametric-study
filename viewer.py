@@ -29,6 +29,9 @@ def create_vtkjs(hb_model_path: Path) -> Path:
 def render(hb_model_path: Path, key='3d_viewer', subscribe=False):
     """Render HBJSON."""
 
+    if st.session_state.host.lower() == 'rhino':
+        return
+
     vtkjs_file = create_vtkjs(hb_model_path)
 
     viewer(
