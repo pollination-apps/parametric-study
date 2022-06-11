@@ -3,28 +3,28 @@
 import streamlit as st
 from pathlib import Path
 from honeybee_vtk.model import Model as VTKModel
-from streamlit_vtkjs import st_vtkjs
+from pollination_streamlit_viewer import viewer
 
 
-# TODO: add caching here to render the model only once
-st.cache()
-def render(file_path: str, key='3d_viewer', subscribe=False):
-    """Render the 3D viewer."""
-    if not file_path:
+@st.cache(suppress_st_warning=True)
+def render(hb_model_path: Path, key='3d_viewer', subscribe=False):
+    """Render HBJSON."""
+
+    if not hb_model_path:
         return
 
-    vtkjs_folder = Path('data')
+    model = VTKModel.from_hbjson(hb_model_path.as_posix())
+
+    vtkjs_folder = st.session_state.temp_folder.joinpath('vtkjs')
     vtkjs_folder.mkdir(parents=True, exist_ok=True)
-    hb_file = Path(file_path)
-    model = VTKModel.from_hbjson(hb_file.as_posix())
-    vtkjs_file = vtkjs_folder.joinpath(f'{hb_file.stem}.vtkjs')
+    vtkjs_file = vtkjs_folder.joinpath(f'{hb_model_path.stem}.vtkjs')
+
     if not vtkjs_file.is_file():
         model.to_vtkjs(
             folder=vtkjs_folder.as_posix(),
-            name=hb_file.stem
+            name=hb_model_path.stem
         )
-    print(f'Updating 3D viewer: {key}')
-    st_vtkjs(
+    viewer(
         content=vtkjs_file.read_bytes(),
         key=key, subscribe=subscribe
     )
