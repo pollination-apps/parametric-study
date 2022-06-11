@@ -6,10 +6,8 @@ from honeybee_vtk.model import Model as VTKModel
 from pollination_streamlit_viewer import viewer
 
 
-@st.cache(suppress_st_warning=True)
-def render(hb_model_path: Path, key='3d_viewer', subscribe=False):
-    """Render HBJSON."""
-
+@st.cache()
+def create_vtkjs(hb_model_path: Path) -> Path:
     if not hb_model_path:
         return
 
@@ -24,6 +22,15 @@ def render(hb_model_path: Path, key='3d_viewer', subscribe=False):
             folder=vtkjs_folder.as_posix(),
             name=hb_model_path.stem
         )
+
+    return vtkjs_file
+
+
+def render(hb_model_path: Path, key='3d_viewer', subscribe=False):
+    """Render HBJSON."""
+
+    vtkjs_file = create_vtkjs(hb_model_path)
+
     viewer(
         content=vtkjs_file.read_bytes(),
         key=key, subscribe=subscribe
