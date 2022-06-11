@@ -10,14 +10,10 @@
 import tempfile
 from pathlib import Path
 import json
-import viewer
 import streamlit as st
 from pollination_streamlit_io import button
 from honeybee.model import Model as HBModel
-
-
-def set_defaults():
-    st.session_state.temp_folder = Path(tempfile.mkdtemp())
+from viewer import render
 
 
 def set_model():
@@ -65,3 +61,10 @@ def set_model():
     elif option == 'Use Geometry Wizard':
         st.session_state.hb_model_path = None
         st.warning('The geometry wizard is not supported yet. 😔')
+
+    if 'hb_model_path' in st.session_state:
+        render(st.session_state.hb_model_path)
+        st.write(
+            'The model is loaded! You can now move to the next step to set the '
+            'input parameters.'
+        )
