@@ -2,23 +2,49 @@
 
 
 import streamlit as st
+import itertools
+from typing import List, Tuple
 
 
-def render():
+ABBREVIATIONS = {
+    'Window to wall ratio': 'wwr',
+    'Louver count': 'lc',
+    'Louver depth': 'ld',
+    'Wall R value': 'wr',
+    'Roof R value': 'rr'
+}
+
+
+@st.cache()
+def calculate_design_combinations(params: dict) -> Tuple[List[dict], int]:
+
+    total_runs = 1
+    for d in params.values():
+        total_runs *= len(d)
+
+    keys = params.keys()
+    values = (params[key] for key in keys)
+    design_combinations = [dict(zip(keys, combination))
+                           for combination in itertools.product(*values)]
+
+    # TODO this can be captured in a unit test
+    assert len(design_combinations) == total_runs, 'Calulating design combinations failed.'
+
+    return design_combinations, len(design_combinations)
+
+
+def get_params() -> Tuple[List[dict], dict]:
     params = {}
     default_value = list(params.keys())
 
     values = st.multiselect(
         'Select several parameters for parametric studies.',
-        options=[
-            'Window to wall ratio', 'Shade depth', 'Shade count', 'Wall R value',
-            'Roof R value'
-        ],
+        options=list(ABBREVIATIONS.keys()),
         default=default_value or ['Window to wall ratio']
     )
     if 'Window to wall ratio' in values:
         with st.container():
-            st.header('Window to wall ratio parmeters')
+            st.header('Window to wall ratio')
             min, max, increment = st.columns(3)
 
             min_wwr = min.slider('Minimum WWR (%)', min_value=10,
@@ -31,11 +57,12 @@ def render():
                 st.error('Minimum WWR must be smaller than Maximum WWR.')
             wwr_options = list(range(min_wwr, max_wwr + wwr_increment, wwr_increment))
             st.write(f'WWR values: {wwr_options}')
-            params['Window to wall ratio'] = wwr_options
+            params['Window to wall ratio'] = [
+                wwr*0.01 for wwr in wwr_options]
 
-    if 'Shade count' in values:
+    if 'Louver count' in values:
         with st.container():
-            st.header('Shade count parmeters')
+            st.header('Louver count')
             min, max, increment = st.columns(3)
             min_sc = min.selectbox('Minimum number', [0, 1, 2, 3, 4], index=0)
             max_sc = max.selectbox(
@@ -48,12 +75,12 @@ def render():
                 add = sc_increment
             sc_options = list(range(min_sc, max_sc + add, sc_increment))
 
-            st.write(f'Shade count values: {sc_options}')
-            params['Shade count'] = sc_options
+            st.write(f'Louver count values: {sc_options}')
+            params['Louver count'] = sc_options
 
-    if 'Shade depth' in values:
+    if 'Louver depth' in values:
         with st.container():
-            st.header('Shade depth parmeters')
+            st.header('Louver depth')
             min, max, increment = st.columns(3)
             min_sd = min.selectbox('Minimum depth', [0, 0.5, 1], index=0)
             max_sd = max.selectbox(
@@ -73,15 +100,14 @@ def render():
                       int(sd_increment * 10))
             ]
 
-            st.write(f'Shade depth values: {sd_options}')
-            params['Shade depth'] = sd_options
+            st.write(f'Louver depth values: {sd_options}')
+            params['Louver depth'] = sd_options
 
     if 'Wall R value' in values or 'Roof R value' in values:
         st.error('Changing R value is not supported yet.')
 
-    total_runs = 1
-    for val in params.values():
-        total_runs *= len(val)
+    design_combinations, total_runs = calculate_design_combinations(params)
 
     st.subheader(f'Total number of runs: {total_runs}')
-    return params
+
+    return design_combinations, ABBREVIATIONS
