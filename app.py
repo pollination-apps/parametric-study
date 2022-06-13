@@ -72,15 +72,15 @@ def main():
                 ' Go back to step 2 to set the parameters.'
             )
         else:
-            job = submit(st.session_state.design_options)
-            st.session_state.job = job
+            job_url = submit(st.session_state.design_options)
+            st.session_state.job_url = job_url
 
     elif step == 4:
-        if 'job' not in st.session_state:
+        if 'job_url' not in st.session_state:
             st.error(
                 'Go back to step 3 to submit the job to Pollination first.'
             )
-        visualize_results(st.session_state.job)
+        visualize_results(st.session_state.job_url)
 
 
 if __name__ == '__main__':

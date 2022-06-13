@@ -96,7 +96,6 @@ def get_figure(job, eui):
     return figure
 
 
-@st.cache(suppress_st_warning=True, allow_output_mutation=True)
 def get_job(job_url):
 
     return job_selector(
@@ -105,6 +104,7 @@ def get_job(job_url):
 
 
 def visualize_results(job_url):
+
     job = get_job(job_url)
 
     clicked = st.button(label='Refresh to check status')

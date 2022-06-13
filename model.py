@@ -63,7 +63,7 @@ def set_model():
         st.warning('The geometry wizard is not supported yet. 😔')
 
     if 'hb_model_path' in st.session_state:
-        render(st.session_state.hb_model_path)
+        render(st.session_state.hb_model_path, bake=False)
         st.write(
             'The model is loaded! You can now move to the next step to set the '
             'input parameters.'
