@@ -3,12 +3,12 @@
 import tempfile
 from pathlib import Path
 import streamlit as st
-import submit_to_pollination
+from submit import submit
 import extra_streamlit_components as stx
 from model import set_model
-from params import get_params
-
-from visualize import get_design_options
+from params import get_design_combinations
+from results import visualize_results
+from options import get_design_options
 from pollination_streamlit_io import special
 from streamlit.server.server import Server
 from helper import load_css
@@ -46,35 +46,38 @@ def main():
                 'You must load a valid model first. Go back to step 1 and load a model.'
             )
         else:
-            design_combinations, param_abbrevs = get_params()
-            st.session_state.design_combinations = design_combinations
+            design_combination, param_abbrevs = get_design_combinations()
+            st.session_state.design_combinations = design_combination
             st.session_state.param_abbrevs = param_abbrevs
+
     elif step == 2:
-        if not st.session_state.design_combinations or not st.session_state.param_abbrevs:
-            st.error(
-                'You must set the input parameters for the study. Go back to step 2 to set the parameters.'
-            )
+        if 'design_combinations' not in st.session_state or \
+                'param_abbrevs' not in st.session_state:
+            st.error('You must set the input parameters for the study.'
+                     'Go back to step 2 to set the parameters.'
+                     )
         else:
             design_options = get_design_options(
                 st.session_state.design_combinations, st.session_state.param_abbrevs)
+            st.session_state.design_options = design_options
 
     elif step == 3:
-        if 'params' not in st.session_state:
+        if 'design_options' not in st.session_state:
             st.error(
-                'You must set the input parameters for the study before submitting it '
-                'to Pollination. Go back to step 2 to set the parameters.'
+                'You should take a look list of design options and visualize a few of them'
+                ' before you submit them to Pollination.'
+                ' Go back to step 2 to set the parameters.'
             )
-        job = submit_to_pollination.render(
-            st.session_state.hb_model_path,
-            st.session_state.params
-        )
+        else:
+            job_url = submit(st.session_state.design_options)
+            st.session_state.job_url = job_url
 
-
-# current_server = Server.get_current()
-# session_infos = Server.get_current()._session_info_by_id.values()
-
-# for v in session_infos:
-#     print(v.session._session_data)
+    elif step == 4:
+        if 'job_url' not in st.session_state:
+            st.error(
+                'Go back to step 3 to submit the job to Pollination first.'
+            )
+        visualize_results(st.session_state.job_url)
 
 
 if __name__ == '__main__':
