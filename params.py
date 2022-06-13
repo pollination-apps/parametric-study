@@ -16,26 +16,31 @@ ABBREVIATIONS = {
 
 
 @st.cache()
-def calculate_design_combinations(params: dict) -> Tuple[List[dict], int]:
+def calculate_combination(input_params: dict) -> Tuple[List[dict], int]:
 
     total_runs = 1
-    for d in params.values():
+    for d in input_params.values():
         total_runs *= len(d)
 
-    keys = params.keys()
-    values = (params[key] for key in keys)
-    design_combinations = [dict(zip(keys, combination))
-                           for combination in itertools.product(*values)]
+    keys = input_params.keys()
+    values = (input_params[key] for key in keys)
+    combination = [dict(zip(keys, combination))
+                   for combination in itertools.product(*values)]
 
     # TODO this can be captured in a unit test
-    assert len(design_combinations) == total_runs, 'Calulating design combinations failed.'
+    assert len(combination) == total_runs, 'Calulating design combinations failed.'
 
-    return design_combinations, len(design_combinations)
+    return combination, len(combination)
 
 
-def get_params() -> Tuple[List[dict], dict]:
-    params = {}
-    default_value = list(params.keys())
+def get_design_combinations() -> Tuple[List[dict], dict]:
+    # TODO: Make sure to capture this in a form so that if the user comes back to the
+    # TODO: tab the params are still there.
+
+    # TODO: Make sure to capture the values in Enum
+
+    input_params = {}
+    default_value = list(input_params.keys())
 
     values = st.multiselect(
         'Select several parameters for parametric studies.',
@@ -55,10 +60,11 @@ def get_params() -> Tuple[List[dict], dict]:
                 'Increment', min_value=5, max_value=20, step=5, value=10)
             if max_wwr < min_wwr:
                 st.error('Minimum WWR must be smaller than Maximum WWR.')
-            wwr_options = list(range(min_wwr, max_wwr + wwr_increment, wwr_increment))
+            wwr_options = list(
+                range(min_wwr, max_wwr + wwr_increment, wwr_increment))
             st.write(f'WWR values: {wwr_options}')
-            params['Window to wall ratio'] = [
-                wwr*0.01 for wwr in wwr_options]
+            input_params['Window to wall ratio'] = [
+                round(wwr*0.01, 2) for wwr in wwr_options]
 
     if 'Louver count' in values:
         with st.container():
@@ -76,7 +82,7 @@ def get_params() -> Tuple[List[dict], dict]:
             sc_options = list(range(min_sc, max_sc + add, sc_increment))
 
             st.write(f'Louver count values: {sc_options}')
-            params['Louver count'] = sc_options
+            input_params['Louver count'] = sc_options
 
     if 'Louver depth' in values:
         with st.container():
@@ -101,12 +107,12 @@ def get_params() -> Tuple[List[dict], dict]:
             ]
 
             st.write(f'Louver depth values: {sd_options}')
-            params['Louver depth'] = sd_options
+            input_params['Louver depth'] = sd_options
 
     if 'Wall R value' in values or 'Roof R value' in values:
         st.error('Changing R value is not supported yet.')
 
-    design_combinations, total_runs = calculate_design_combinations(params)
+    design_combinations, total_runs = calculate_combination(input_params)
 
     st.subheader(f'Total number of runs: {total_runs}')
 
