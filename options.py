@@ -9,7 +9,9 @@ from typing import List, Dict, Tuple
 from viewer import render
 
 
-def generate_design_options(design_combinations, abbreviations) -> Tuple[Dict[str, Path], List[Dict]]:
+def generate_design_options(design_combinations,
+                            abbreviations) -> Tuple[Dict[str, Path], Dict[str, Path],
+                                                    List[dict]]:
 
     design_options_folder = st.session_state.temp_folder.joinpath('design_options')
     if design_options_folder.exists():
@@ -21,10 +23,11 @@ def generate_design_options(design_combinations, abbreviations) -> Tuple[Dict[st
     faces_with_aperture = [face for face in base_model.faces if face.apertures and isinstance(
         face.boundary_condition, Outdoors)]
 
-    viz_dict = {}  # Only used for visualization
+    pre_viz_dict = {}  # Used for visualization before Run
+    post_viz_dict = {}  # Used for visualization after run
     design_options = []  # Used for submission to pollination
 
-    for design_combination in design_combinations:
+    for num, design_combination in enumerate(design_combinations):
         design_option = {}
 
         for face in faces_with_aperture:
@@ -51,22 +54,26 @@ def generate_design_options(design_combinations, abbreviations) -> Tuple[Dict[st
         # write design option as HBJSON
         base_model.to_hbjson(hbjson_file.as_posix())
 
-        viz_dict[viz_name] = hbjson_file
+        pre_viz_dict[viz_name] = hbjson_file
+        post_viz_dict[num] = hbjson_file
         design_option['model'] = hbjson_file.as_posix()
         design_options.append(design_option)
 
-    return viz_dict, design_options
+    return pre_viz_dict, post_viz_dict, design_options
 
 
-def get_design_options(design_combinations: List[dict], abbreviations: dict) -> List[Dict]:
+def get_design_options(design_combinations: List[dict],
+                       abbreviations: dict) -> Tuple[List[Dict], Dict[str, Path]]:
     """Visualize a design option."""
 
-    viz_dict, design_options = generate_design_options(
+    pre_viz_dict, post_viz_dict, design_options = generate_design_options(
         design_combinations, abbreviations)
 
+    st.session_state.post_viz_dict = post_viz_dict
+
     viz_option = st.radio('Select design option to visualize',
-                          list(viz_dict.keys()))
+                          list(pre_viz_dict.keys()))
 
-    render(viz_dict[viz_option])
+    render(pre_viz_dict[viz_option])
 
-    return design_options
+    return design_options, post_viz_dict
