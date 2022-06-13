@@ -15,8 +15,8 @@ def _get_annual_energy_recipe(api_client):
 
 def create_job(design_options) -> NewJob:
     api_key = st.text_input('Enter your Pollination API key', type='password')
-    api_client = ApiClient(api_token=api_key)
     st.session_state.api_key = api_key
+    api_client = ApiClient(api_token=api_key)
     if not (api_key and api_client):
         return
 
@@ -25,6 +25,7 @@ def create_job(design_options) -> NewJob:
     st.subheader('Submission information')
     owner = st.text_input('Account name')
     project = st.text_input('Project name', value='demo')
+
     st.subheader('Location information')
     epw = st.file_uploader('Upload EPW file', type=['epw'])
     if epw:
@@ -43,7 +44,7 @@ def create_job(design_options) -> NewJob:
     ddy_path = new_job.upload_artifact(ddy_file, '.')
 
     arguments = []
-    for design_option in design_options:
+    for num, design_option in enumerate(design_options):
         # TODO: find a better way to use the design_option dict
         argument = {}
         model_path = new_job.upload_artifact(Path(design_option['model']), '.')
@@ -51,6 +52,7 @@ def create_job(design_options) -> NewJob:
         argument['epw'] = epw_path
         argument['ddy'] = ddy_path
         argument['viz-variables'] = '-v "Zone Mean Radiant Temperature"'
+        argument['option-no'] = num
         if 'Window to wall ratio' in design_option:
             argument['window-to-wall-ratio'] = design_option['Window to wall ratio']
         if 'Louver count' in design_option:
@@ -69,17 +71,24 @@ def submit_job(job: NewJob) -> Job:
     return running_job
 
 
-def submit(design_options: dict) -> str:
+def get_scheduled_job(new_job):
+    submit = st.button(label='Submit to Pollination')
+    if submit:
+        running_job = submit_job(new_job)
+        time.sleep(2)
+        job_url = f'https://app.pollination.cloud/{running_job.owner}/projects/{running_job.project}/jobs/{running_job.id}'
+        return get_job(job_url), job_url
+
+
+def submit(design_options: dict):
 
     new_job = create_job(design_options)
 
     if new_job:
-        submit = st.checkbox('Submit to Pollination')
+        submit = st.button(label='Submit Job')
         if submit:
             running_job = submit_job(new_job)
             time.sleep(2)
-            job_url = f'https://app.pollination.cloud/projects/{running_job.owner}/{running_job.project}/jobs/{running_job.id}'
-            st.markdown(
-                f'Check out the simulations here [here]({job_url})'
-            )
+            job_url = f'https://app.pollination.cloud/{running_job.owner}/projects/{running_job.project}/jobs/{running_job.id}'
+            st.success('Job submitted to Pollination. Move to the next tab.')
             return job_url

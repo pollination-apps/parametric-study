@@ -29,6 +29,7 @@ def main():
     if not host:
         host = 'web'
     st.session_state.host = host
+    st.session_state.status = None
 
     st.title('Parametric Study')
 
@@ -57,27 +58,29 @@ def main():
                      'Go back to step 2 to set the parameters.'
                      )
         else:
-            design_options = get_design_options(
+            design_options, post_viz_dict = get_design_options(
                 st.session_state.design_combinations, st.session_state.param_abbrevs)
             st.session_state.design_options = design_options
+            st.session_state.post_viz_dict = post_viz_dict
 
     elif step == 3:
-        if 'design_options' not in st.session_state:
+        if 'design_options' not in st.session_state or \
+                'post_viz_dict' not in st.session_state:
             st.error(
                 'You should take a look list of design options and visualize a few of them'
                 ' before you submit them to Pollination.'
                 ' Go back to step 2 to set the parameters.'
             )
         else:
-            job_url = submit(st.session_state.design_options)
-            st.session_state.job_url = job_url
+            job = submit(st.session_state.design_options)
+            st.session_state.job = job
 
     elif step == 4:
-        if 'job_url' not in st.session_state:
+        if 'job' not in st.session_state:
             st.error(
                 'Go back to step 3 to submit the job to Pollination first.'
             )
-        visualize_results(st.session_state.job_url)
+        visualize_results(st.session_state.job)
 
 
 if __name__ == '__main__':
