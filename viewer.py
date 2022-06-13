@@ -4,6 +4,8 @@ import streamlit as st
 from pathlib import Path
 from honeybee_vtk.model import Model as VTKModel
 from pollination_streamlit_viewer import viewer
+from honeybee.model import Model as HBModel
+from pollination_streamlit_io import button, inputs
 
 
 @st.cache()
@@ -26,15 +28,54 @@ def create_vtkjs(hb_model_path: Path) -> Path:
     return vtkjs_file
 
 
-def render(hb_model_path: Path, key='3d_viewer', subscribe=False):
+def rhino_hbjson(hb_model: HBModel, bake: bool = True) -> None:
+    """Visualize and bake HBJSON in rhino."""
+
+    if bake:
+        col1, col2 = st.columns(2)
+
+        with col1:
+            inputs.send(
+                data=hb_model.to_dict(),
+                is_pollination_model=True,
+                default_checked=True,
+                label='View model',
+                unique_id='unique-id-02',
+                key='architext option',
+            )
+
+        with col2:
+            button.send(
+                'BakePollinationModel',
+                hb_model.to_dict(),
+                'bake-geometry-key',
+                options={
+                    "layer": "hbjson",
+                    "units": "Meters"
+                },
+                key='bake-geometry',
+            )
+    else:
+        inputs.send(
+            data=hb_model.to_dict(),
+            is_pollination_model=True,
+            default_checked=True,
+            label='View model',
+            unique_id='unique-id-02',
+            key='architext option',
+        )
+
+
+def render(hb_model_path: Path, key='3d_viewer', subscribe=False, bake=True):
     """Render HBJSON."""
 
     if st.session_state.host.lower() == 'rhino':
-        return
+        hb_model = HBModel.from_hbjson(hb_model_path.as_posix())
+        rhino_hbjson(hb_model, bake=bake)
+    else:
+        vtkjs_file = create_vtkjs(hb_model_path)
 
-    vtkjs_file = create_vtkjs(hb_model_path)
-
-    viewer(
-        content=vtkjs_file.read_bytes(),
-        key=key, subscribe=subscribe
-    )
+        viewer(
+            content=vtkjs_file.read_bytes(),
+            key=key, subscribe=subscribe
+        )
