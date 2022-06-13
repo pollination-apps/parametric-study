@@ -1,2 +1,11 @@
-# parametric-studies-app
-A Pollination app to facilitate preparing and executing parametric studies.
+## Parametric Study App
+
+![App](/images/app.png)
+
+## To run the app locally
+
+- Clone the repo locally, go into the directory and run the following commands;
+
+- `pip install -r requierments.txt`
+
+- `streamlit run app.py`
