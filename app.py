@@ -81,7 +81,8 @@ def main():
             st.error(
                 'Go back to step 3 to submit the job to Pollination first.'
             )
-        visualize_results(st.session_state.job_url)
+        else:
+            visualize_results(st.session_state.job_url)
 
 
 if __name__ == '__main__':
