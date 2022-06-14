@@ -16,9 +16,10 @@ def create_vtkjs(hb_model_path: Path) -> Path:
     model = VTKModel.from_hbjson(hb_model_path.as_posix())
 
     vtkjs_folder = st.session_state.temp_folder.joinpath('vtkjs')
-    vtkjs_folder.mkdir(parents=True, exist_ok=True)
-    vtkjs_file = vtkjs_folder.joinpath(f'{hb_model_path.stem}.vtkjs')
+    if not vtkjs_folder.exists():
+        vtkjs_folder.mkdir(parents=True, exist_ok=True)
 
+    vtkjs_file = vtkjs_folder.joinpath(f'{hb_model_path.stem}.vtkjs')
     if not vtkjs_file.is_file():
         model.to_vtkjs(
             folder=vtkjs_folder.as_posix(),
@@ -73,9 +74,13 @@ def render(hb_model_path: Path, key='3d_viewer', subscribe=False, bake=True):
         hb_model = HBModel.from_hbjson(hb_model_path.as_posix())
         rhino_hbjson(hb_model, bake=bake)
     else:
-        vtkjs_file = create_vtkjs(hb_model_path)
+        vtkjs_name = f'{hb_model_path.stem}_vtkjs'
 
-        viewer(
-            content=vtkjs_file.read_bytes(),
-            key=key, subscribe=subscribe
-        )
+        if vtkjs_name not in st.session_state:
+            vtkjs = create_vtkjs(hb_model_path)
+            viewer(content=vtkjs.read_bytes(),
+                   key=key, subscribe=subscribe)
+            st.session_state[vtkjs_name] = vtkjs
+        else:
+            viewer(content=st.session_state[vtkjs_name].read_bytes(),
+                   key=key, subscribe=subscribe)
