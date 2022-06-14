@@ -76,6 +76,7 @@ def main():
             st.session_state.job_url = job_url
 
     elif step == 4:
+        st.write(st.session_state)
         if 'job_url' not in st.session_state:
             st.error(
                 'Go back to step 3 to submit the job to Pollination first.'
