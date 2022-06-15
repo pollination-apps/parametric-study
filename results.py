@@ -107,18 +107,12 @@ def visualize_results(job_url):
 
     job = get_job(job_url)
 
-    clicked = st.button(label='Refresh to check status')
-
-    if clicked:
-        status = request_status(job)
-        if status != SimStatus.COMPLETE:
-            st.warning(f'Simulation is {status.name}. Refresh to check again'
-                       f' or monitor [here]({job_url})')
-
-    if request_status(job) == SimStatus.COMPLETE:
-
+    status = request_status(job)
+    if status != SimStatus.COMPLETE:
+        st.warning(f'Simulation is {status.name}.')
+        st.experimental_rerun()
+    else:
         eui = get_eui(job)
-
         fig = get_figure(job, eui)
 
         st.session_state.fig = fig
