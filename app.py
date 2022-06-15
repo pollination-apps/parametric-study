@@ -69,7 +69,7 @@ def main():
             st.error(
                 'You should take a look list of design options and visualize a few of them'
                 ' before you submit them to Pollination.'
-                ' Go back to step 2 to set the parameters.'
+                ' Go back to step 3 to visualize the design options.'
             )
         else:
             job_url = submit(st.session_state.design_options)
@@ -78,7 +78,7 @@ def main():
     elif step == 4:
         if 'job_url' not in st.session_state:
             st.error(
-                'Go back to step 3 to submit the job to Pollination first.'
+                'Go back to step 4 to submit the job to Pollination first.'
             )
         else:
             visualize_results(st.session_state.job_url)
