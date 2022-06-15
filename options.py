@@ -74,6 +74,6 @@ def get_design_options(design_combinations: List[dict],
     viz_option = st.radio('Select design option to visualize',
                           list(pre_viz_dict.keys()))
 
-    render(pre_viz_dict[viz_option])
+    render(pre_viz_dict[viz_option], key='options-viewer')
 
     return design_options, post_viz_dict
