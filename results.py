@@ -166,10 +166,9 @@ def visualize_results(job_url):
         figure = get_figure(df, st.session_state.eui)
         st.plotly_chart(figure)
 
-        option_num = st.text_input('Option number', value='')
-        if option_num:
-            try:
-                render(st.session_state.post_viz_dict[int(
-                    option_num)], key='results-viewer')
-            except (ValueError, KeyError):
-                st.error('Not a valid option number.')
+        option_num = st.text_input('Option number', value='0')
+        try:
+            render(st.session_state.post_viz_dict[int(
+                option_num)], key='results-viewer')
+        except (ValueError, KeyError):
+            st.error('Not a valid option number.')
