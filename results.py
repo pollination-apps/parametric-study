@@ -172,3 +172,4 @@ def visualize_results(job_url):
                 option_num)], key='results-viewer')
         except (ValueError, KeyError):
             st.error('Not a valid option number.')
+            return
