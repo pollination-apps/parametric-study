@@ -21,7 +21,6 @@ from viewer import render
 from datetime import datetime
 
 
-
 class SimStatus(Enum):
     NOTSTARTED = 0
     INCOMPLETE = 1
@@ -113,7 +112,6 @@ def get_figure(df: DataFrame, eui: List[float]) -> Figure:
     return figure
 
 
-
 def create_job(job_url: str) -> Job:
     """Create a Job object from a job URL."""
     url_split = job_url.split('/')
@@ -175,12 +173,11 @@ def visualize_results(job_url):
 
         option_num = st.text_input('Option number', value='0')
 
-
         try:
             st.session_state.post_viz_dict[int(option_num)]
         except (ValueError, KeyError):
             st.error('Not a valid option number.')
             return
-        
+
         render(st.session_state.post_viz_dict[int(
-                option_num)], key='results-viewer')
+            option_num)], key='results-viewer')
