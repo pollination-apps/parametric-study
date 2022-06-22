@@ -71,15 +71,6 @@ def submit_job(job: NewJob) -> Job:
     return running_job
 
 
-def get_scheduled_job(new_job):
-    submit = st.button(label='Submit to Pollination')
-    if submit:
-        running_job = submit_job(new_job)
-        time.sleep(2)
-        job_url = f'https://app.pollination.cloud/{running_job.owner}/projects/{running_job.project}/jobs/{running_job.id}'
-        return get_job(job_url), job_url
-
-
 def submit(design_options: dict):
 
     new_job = create_job(design_options)
