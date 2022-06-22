@@ -1,7 +1,6 @@
 """A module to add a Pollination 3D viewer to the app."""
 
 import streamlit as st
-import time
 from pathlib import Path
 from honeybee_vtk.model import Model as VTKModel
 from pollination_streamlit_viewer import viewer
@@ -79,7 +78,6 @@ def render(hb_model_path: Path, key='3d_viewer', subscribe=False, bake=True):
 
         if vtkjs_name not in st.session_state:
             vtkjs = create_vtkjs(hb_model_path)
-            time.sleep(2)
             viewer(content=vtkjs.read_bytes(),
                    key=key, subscribe=subscribe)
             st.session_state[vtkjs_name] = vtkjs
