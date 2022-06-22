@@ -18,6 +18,8 @@ from pollination_streamlit.interactors import Job
 from queenbee.job.job import JobStatusEnum
 
 from viewer import render
+from datetime import datetime
+
 
 
 class SimStatus(Enum):
@@ -111,7 +113,7 @@ def get_figure(df: DataFrame, eui: List[float]) -> Figure:
     return figure
 
 
-# @st.cache(allow_output_mutation=True)
+
 def create_job(job_url: str) -> Job:
     """Create a Job object from a job URL."""
     url_split = job_url.split('/')
@@ -119,7 +121,9 @@ def create_job(job_url: str) -> Job:
     project = url_split[-3]
     owner = url_split[-5]
 
-    return Job(owner, project, job_id, ApiClient(api_token=st.session_state.api_key))
+    job = Job(owner, project, job_id, ApiClient(api_token=st.session_state.api_key))
+
+    st.session_state.job = job
 
 
 @st.cache()
@@ -145,7 +149,10 @@ def download_models(job: Job) -> None:
 
 def visualize_results(job_url):
 
-    job = create_job(job_url)
+    if 'job' not in st.session_state:
+        create_job(job_url)
+
+    job = st.session_state.job
 
     if request_status(job) != SimStatus.COMPLETE:
         clicked = st.button('Refresh to update status')
@@ -154,8 +161,8 @@ def visualize_results(job_url):
             st.warning(f'Simulation is {status.name}.')
 
     else:
-       # streamlit fails to hash a _json.Scanner object so we need to use a conditional
-       # here to not run get_eui on each referesh
+        # streamlit fails to hash a _json.Scanner object so we need to use a conditional
+        # here to not run get_eui on each referesh
         if 'eui' not in st.session_state:
             eui = get_eui(job)
             st.session_state.eui = eui
@@ -167,9 +174,13 @@ def visualize_results(job_url):
         st.plotly_chart(figure)
 
         option_num = st.text_input('Option number', value='0')
+
+
         try:
-            render(st.session_state.post_viz_dict[int(
-                option_num)], key='results-viewer')
+            st.session_state.post_viz_dict[int(option_num)]
         except (ValueError, KeyError):
             st.error('Not a valid option number.')
             return
+        
+        render(st.session_state.post_viz_dict[int(
+                option_num)], key='results-viewer')
