@@ -73,7 +73,8 @@ def main():
             )
         else:
             job_url = submit(st.session_state.design_options)
-            st.session_state.job_url = job_url
+            if 'job_url' not in st.session_state or not st.session_state.job_url:
+                st.session_state.job_url = job_url
 
     elif step == 4:
         if 'job_url' not in st.session_state:
