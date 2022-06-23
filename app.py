@@ -7,8 +7,9 @@ from submit import submit
 import extra_streamlit_components as stx
 from model import set_model
 from params import get_design_combinations
-from results import visualize_results
+from visualize import visualize
 from options import get_design_options
+from results import results
 from pollination_streamlit_io import special
 from streamlit.server.server import Server
 from helper import load_css
@@ -34,7 +35,8 @@ def main():
     st.title('Parametric Study')
 
     step = stx.stepper_bar(
-        steps=['Getting Started', 'Parameters', 'Visualize', 'Submit', 'Results'],
+        steps=['Getting Started', 'Parameters',
+               'Visualize', 'Submit', 'Results', 'Visualize'],
         is_vertical=False
     )
 
@@ -46,6 +48,7 @@ def main():
             st.error(
                 'You must load a valid model first. Go back to step 1 and load a model.'
             )
+            return
         else:
             design_combination, param_abbrevs = get_design_combinations()
             st.session_state.design_combinations = design_combination
@@ -57,6 +60,7 @@ def main():
             st.error('You must set the input parameters for the study.'
                      'Go back to step 2 to set the parameters.'
                      )
+            return
         else:
             design_options, post_viz_dict = get_design_options(
                 st.session_state.design_combinations, st.session_state.param_abbrevs)
@@ -71,9 +75,10 @@ def main():
                 ' before you submit them to Pollination.'
                 ' Go back to step 3 to visualize the design options.'
             )
+            return
         else:
             job_url = submit(st.session_state.design_options)
-            if 'job_url' not in st.session_state or not st.session_state.job_url:
+            if job_url:
                 st.session_state.job_url = job_url
 
     elif step == 4:
@@ -81,8 +86,23 @@ def main():
             st.error(
                 'Go back to step 4 to submit the job to Pollination first.'
             )
+            return
         else:
-            visualize_results(st.session_state.job_url)
+            df, eui = results(st.session_state.job_url)
+
+            if len(df.columns) != 0 and len(eui) != 0:
+                st.session_state.df = df
+                st.session_state.eui = eui
+
+    elif step == 5:
+        if 'eui' not in st.session_state or 'df' not in st.session_state:
+            st.error(
+                'Go back to step 5 to download the results.'
+            )
+            return
+        else:
+            visualize(st.session_state.post_viz_dict,
+                      st.session_state.df, st.session_state.eui)
 
 
 if __name__ == '__main__':

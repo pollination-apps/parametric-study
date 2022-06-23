@@ -1,24 +1,16 @@
-"""Visualize the results of a parametric study."""
-
-
 import json
 import zipfile
 import shutil
+from pandas import DataFrame
 import streamlit as st
 
 from enum import Enum
-from typing import List, Dict
+from typing import List
 from pathlib import Path
-from plotly import graph_objects as go
-from plotly.graph_objects import Figure
-from pandas import DataFrame
 
 from pollination_streamlit.api.client import ApiClient
 from pollination_streamlit.interactors import Job
 from queenbee.job.job import JobStatusEnum
-
-from viewer import render
-from datetime import datetime
 
 
 class SimStatus(Enum):
@@ -84,34 +76,6 @@ def get_eui(job) -> List[float]:
     return eui
 
 
-def get_figure(df: DataFrame, eui: List[float]) -> Figure:
-    """Prepare Plotly Parallel Coordinates plot."""
-
-    dimension = [
-        dict(label='Option-no', values=df['option-no']),
-        dict(label='EUI', values=eui)
-    ]
-
-    if 'window-to-wall-ratio' in df.columns:
-        dimension.append(
-            dict(label='WWR', values=df['window-to-wall-ratio'].values, range=[0, 1]))
-    if 'louver-count' in df.columns:
-        dimension.append(
-            dict(label='Louver count', values=df['louver-count'].values))
-    if 'louver-depth' in df.columns:
-        dimension.append(
-            dict(label='Louver depth', values=df['louver-depth'].values))
-
-    figure = go.Figure(data=go.Parcoords(
-        line=dict(color='rgb(228, 61, 106)'), dimensions=dimension))
-
-    figure.update_layout(
-        font=dict(size=15)
-    )
-
-    return figure
-
-
 def create_job(job_url: str) -> Job:
     """Create a Job object from a job URL."""
     url_split = job_url.split('/')
@@ -119,12 +83,10 @@ def create_job(job_url: str) -> Job:
     project = url_split[-3]
     owner = url_split[-5]
 
-    job = Job(owner, project, job_id, ApiClient(api_token=st.session_state.api_key))
+    st.session_state.job = Job(owner, project, job_id, ApiClient(
+        api_token=st.session_state.api_key))
 
-    st.session_state.job = job
 
-
-@st.cache()
 def download_models(job: Job) -> None:
     """Download HBJSON models from the job."""
 
@@ -145,39 +107,25 @@ def download_models(job: Job) -> None:
     st.session_state.model_folder = model_folder
 
 
-def visualize_results(job_url):
+def results(job_url):
 
-    if 'job' not in st.session_state:
-        create_job(job_url)
+    df = DataFrame()
+    eui = []
+
+    create_job(job_url)
 
     job = st.session_state.job
 
     if request_status(job) != SimStatus.COMPLETE:
-        clicked = st.button('Refresh to update status')
+        clicked = st.button('Refresh to download results')
         if clicked:
             status = request_status(job)
             st.warning(f'Simulation is {status.name}.')
 
     else:
-        # streamlit fails to hash a _json.Scanner object so we need to use a conditional
-        # here to not run get_eui on each referesh
-        if 'eui' not in st.session_state:
-            eui = get_eui(job)
-            st.session_state.eui = eui
-
+        eui = get_eui(job)
         download_models(job)
         df = job.runs_dataframe.dataframe
+        st.success('Result downloaded. Move to the next tab.')
 
-        figure = get_figure(df, st.session_state.eui)
-        st.plotly_chart(figure)
-
-        option_num = st.text_input('Option number', value='0')
-
-        try:
-            st.session_state.post_viz_dict[int(option_num)]
-        except (ValueError, KeyError):
-            st.error('Not a valid option number.')
-            return
-
-        render(st.session_state.post_viz_dict[int(
-            option_num)], key='results-viewer')
+    return df, eui
