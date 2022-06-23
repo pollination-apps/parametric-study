@@ -117,9 +117,10 @@ def results(job_url):
     job = st.session_state.job
 
     if request_status(job) != SimStatus.COMPLETE:
-        status = request_status(job)
-        st.warning(f'Simulation is {status.name}.')
-        st.experimental_rerun()
+        clicked = st.button('Refresh to download results')
+        if clicked:
+            status = request_status(job)
+            st.warning(f'Simulation is {status.name}.')
 
     else:
         eui = get_eui(job)
