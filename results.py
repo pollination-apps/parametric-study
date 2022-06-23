@@ -1,3 +1,5 @@
+"""Download the results of a parametric study."""
+
 import json
 import zipfile
 import shutil
